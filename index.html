@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>arrival-restock-arrangement-2</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.5rem;
+      background-color: transparent;
+    }
+    .reaction-button {
+      display: inline-block;
+      margin: 0 10px;
+      font-size: 2rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .reaction-button.selected {
+      background-color: #bbb0c5;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    span.count {
+      display: block;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="reactions">
+    <button class="reaction-button" onclick="selectReaction('smile')">😊<span id="smile-count" class="count">0</span></button>
+    <button class="reaction-button" onclick="selectReaction('love')">🥰<span id="love-count" class="count">0</span></button>
+    <button class="reaction-button" onclick="selectReaction('sparkle')">✨<span id="sparkle-count" class="count">0</span></button>
+    <button class="reaction-button" onclick="selectReaction('like')">👍<span id="like-count" class="count">0</span></button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyAEYMyC57oJAKbLMxWsD8SD8cDHIseu4rQ",
+      authDomain: "arrival-restock-arrangement.firebaseapp.com",
+      databaseURL: "https://arrival-restock-arrangement-default-rtdb.firebaseio.com",
+      projectId: "arrival-restock-arrangement",
+      storageBucket: "arrival-restock-arrangement.firebasestorage.app",
+      messagingSenderId: "163370448165",
+      appId: "1:163370448165:web:a1c60cf82a223eeb5116cc"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+
+    var reactions = ['smile', 'love', 'sparkle', 'like'];
+    var articleID = 'arrival-restock-arrangement-2';
+
+    function getSavedReaction() {
+      return localStorage.getItem(articleID + '_reaction');
+    }
+
+    function setSavedReaction(type) {
+      localStorage.setItem(articleID + '_reaction', type);
+    }
+
+    function selectReaction(type) {
+      var previous = getSavedReaction();
+      if (previous) return;
+
+      var refNew = db.ref('reactions/' + articleID + '/' + type);
+      refNew.transaction(function (current) {
+        return (current || 0) + 1;
+      });
+
+      setSavedReaction(type);
+      document.querySelector('[onclick="selectReaction(\'' + type + '\')"]').classList.add('selected');
+    }
+
+    function listenReactions() {
+      reactions.forEach(function (type) {
+        var ref = db.ref('reactions/' + articleID + '/' + type);
+        ref.on('value', function (snapshot) {
+          document.getElementById(type + '-count').textContent = snapshot.val() || 0;
+        });
+      });
+
+      var selected = getSavedReaction();
+      if (selected) {
+        document.querySelector('[onclick="selectReaction(\'' + selected + '\')"]').classList.add('selected');
+      }
+    }
+
+    listenReactions();
+  </script>
+</body>
+</html>
